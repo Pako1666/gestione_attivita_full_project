@@ -1,0 +1,90 @@
+version: '3.7'
+
+#networks:
+#  conn:
+#    driver: bridge
+#    ipam:
+#      config:
+#        - subnet: 192.168.1.0/24
+services:
+
+  mysql_db:
+    image: "mysql:latest"
+    container_name: "mysql_db"
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      - "MYSQL_DATABASE=gestione_attivita"
+      - "MYSQL_PASSWORD=mysql"
+      - "MYSQL_USER=mysql"
+      - "MYSQL_ROOT_PASSWORD=mysql"
+      - "MYSQL_ALLOW_EMPTY_PASSWORD=yes"
+      - "MYSQL_RANDOM_ROOT_PASSWORD=no"
+    ports:
+      - "3306:3306"
+    
+
+  #logservice:
+  #  container_name: 'logservice'
+  #  hostname: logservice.com
+  #  build:
+  #    context: './gestione_attivita_log_service/log_service'
+  #    dockerfile: 'Dockerfile'
+
+  #  depends_on:
+  #    - kafka-queue
+
+  #  ports:
+  #    - "5050:5050"
+
+  gestione_attivita:
+    container_name: gestione_attivita
+    hostname: gestioneattivita.com
+    build:
+      context: ./gestione_attivita_main_service/gestore_attivita
+      dockerfile: Dockerfile
+    depends_on:
+    #  - mysql_db
+      - kafka-queue
+    #  - logservice
+      
+
+    ports:
+      - "8080:8080"
+
+
+  #bff:
+  #  container_name: gestione_attivita_bff
+  #  build:
+  #    context: "./gestione_attivita_bff/gestore_attivita_bff"
+  #    dockerfile: Dockerfile
+  #  
+  #  depends_on:
+  #    - gestione_attivita
+  #    - redis_container
+
+  #  ports:
+  #    - "7070:7070"
+    
+
+
+  kafka-queue:
+    image: landoop/fast-data-dev:latest
+    container_name: kafka-queue
+    ports:
+      - "2181:2181"
+      - "3030:3030"
+      - "8081-8083:8081-8083"
+      - "9581-9585:9581-9585"
+      - "9092:9092"
+    environment:
+      ADV_HOST: 127.0.0.1
+    
+    restart: unless-stopped
+    
+  #redis_container:
+  #  image: "redis"
+  #  container_name: "redis_container"
+  #  ports:
+  #    - "6379:6397"
+
